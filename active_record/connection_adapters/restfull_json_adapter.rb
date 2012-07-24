@@ -12,7 +12,7 @@ require 'monitor'
 require 'timeout'
 require 'typhoeus'
 require 'logger'
-require 'kaminari'
+require 'constantinople'
 
 
 module ActiveRecord
@@ -20,6 +20,7 @@ module ActiveRecord
     attr_accessor :ws_errors
     # restfull json adapter
     def self.restfull_json_connection(config) # :nodoc:
+      config = config.merge(CONSTANTINOPLE.restfull).merge({:hydra => HYDRA})
       config = config.symbolize_keys
       ConnectionAdapters::RestfullJsonAdapter.new(config, logger)
     end
@@ -148,8 +149,6 @@ module ActiveRecord
     end
   end
   
-  
-  
   module AttributeMethods #:nodoc:
     def attributes_with_values(include_primary_key = true, include_readonly_attributes = true, attribute_names = @attributes.keys)
       attrs      = {}
@@ -253,12 +252,11 @@ module ActiveRecord
       DEFAULT_TIMEOUT = 10000
       
       
-      def resource_uri(action = nil)
+      def resource_uri(action = nil) 
         prefix = (use_ssl)? "https://" : "http://"
         sufix = (action.nil?)? "" : "/#{action}"
         "#{prefix}#{host}#{resource_path}#{sufix}"
       end
-      
     
       ADAPTER_NAME = 'RestfullJson'
       
@@ -474,7 +472,7 @@ module ActiveRecord
       # Restfull web service calls ======================================
       def exec_invoke_call(action, attributes_with_values = {}, body = nil, headers = nil, name = nil, binds = [])
         record.ws_errors = {}
-        result = post_ws(resource_uri(action), {}.merge({:attributes => attributes_with_values}), body, headers)
+        result = post_ws(resource_uri(action), {:model_name => record.class}.merge({:attributes => attributes_with_values}), body, headers)
         
         raise WsRecordInvalid.new(record) if record.ws_errors.present? 
         
@@ -483,12 +481,13 @@ module ActiveRecord
       
       def exec_select_call(sql, name = nil, binds = [])
         log(sql, name, binds) do
+          model_name = name.nil? ? get_model_name(self.pool.columns_hash.keys.first) : name.split(' ')[0] #TODO Still we need to make it more simplified
            # Don't cache statements without bind values
           if binds.empty?
-            result = post_ws(resource_uri('select'), {:sql => sql})
+            result = post_ws(resource_uri('select'), {:model_name => model_name, :sql => sql})
           else
              #get it from cache
-            result = post_ws(resource_uri('select'), {:sql => sql})
+            result = post_ws(resource_uri('select'), {:model_name => model_name, :sql => sql})
           end
           json_parsed_record(result).to_a
         end
@@ -496,7 +495,7 @@ module ActiveRecord
       
       def exec_insert_call(id, attributes_with_values = {})
         record.ws_errors = {}
-        result = post_ws(resource_uri(), {}.merge({:attributes => attributes_with_values}))
+        result = post_ws(resource_uri(nil), {:model_name => record.class}.merge({:attributes => attributes_with_values}))
         
         raise WsRecordInvalid.new(record) if record.ws_errors.present? 
         
@@ -508,7 +507,7 @@ module ActiveRecord
       
       def exec_delete_call(id)
         record.ws_errors = {}
-        delete_ws(resource_uri(id))
+        delete_ws(resource_uri(id), {:model_name => record.class})
         raise WsRecordInvalid.new(record) if record.ws_errors.present? 
         #log(sql, name, binds) do
         #end
@@ -517,7 +516,7 @@ module ActiveRecord
       def exec_update_call(id, attributes_with_values = {})
         
         record.ws_errors = {}
-        result = put_easy_ws(resource_uri(id), {}.merge({:attributes => attributes_with_values}))
+        result = put_easy_ws(resource_uri(id), {:model_name => record.class}.merge({:attributes => attributes_with_values}))
         raise WsRecordInvalid.new(record) if record.ws_errors.present? 
         
         rows_affected = 1
@@ -527,7 +526,7 @@ module ActiveRecord
       
       def valid_call?(id, attributes_with_values = {})
         record.ws_errors = {}
-        result = post_ws(resource_uri('valid'), {}.merge({:id => id, :attributes => attributes_with_values}))
+        result = post_ws(resource_uri('valid'), {:model_name => record.class}.merge({:id => id, :attributes => attributes_with_values}))
         
         raise WsRecordInvalid.new(record) if record.ws_errors.present? 
         true
@@ -583,7 +582,8 @@ module ActiveRecord
       end
       
       def table_fields(table_name)
-        result = get_ws(resource_uri('schema_fields'))
+        model_name = get_model_name(table_name)
+        result = get_ws(resource_uri('schema_fields'), {:model_name => model_name})
         
         fields = []
         JSON.parse(result).each do |field|
@@ -596,7 +596,11 @@ module ActiveRecord
         def select(sql, name = nil, binds = []) #:nodoc:
           exec_select_call(sql, name, binds)
         end
-
+        
+        def get_model_name(table_name)
+          table_name.singularize.camelize  
+        end
+        
         def translate_exception(exception, message)
           case exception.message
           when /column(s)? .* (is|are) not unique/
