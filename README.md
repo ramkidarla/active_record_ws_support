@@ -6,27 +6,29 @@ Usage:
 
  - with ActiveRecord
 
-	class User < ActiveRecord::Base
-	end 
+		class User < ActiveRecord::Base
+		end 
  
  - with active_record_ws_support
 
-	class User < ActiveRecord::Base
-	  establish_connection :adapter => "restfull_json"
-	end
+		class User < ActiveRecord::Base
+		  establish_connection :adapter => "restfull_json"
+		end
 	    
-Setup 
+Setup:
  - Copy the whole active_record folder to lib under the root.
  - Add a restfull.yml file under config directory with content similar to below
  
-	host: 127.0.0.1:3010
-	use_ssl: false
-	use_api_key: true
-	api_key_name: access_token
-	api_key: 2MNFP7SrgD3QhuvuUY0hD2P8s7MSdCewHySAYvQo
-	resource_path: /api/v1/generic
-  Note: 
-	Works with rails-3.2.6 and ruby-1.9.3
+		host: 127.0.0.1:3010
+		use_ssl: false
+		use_api_key: true
+		api_key_name: access_token
+		api_key: 2MNFP7SrgD3QhuvuUY0hD2P8s7MSdCewHySAYvQo
+		resource_path: /api/v1/generic
+
+
+Note: 
+		Works with rails-3.2.6 and ruby-1.9.3
 
 =========================
 Dependencies
