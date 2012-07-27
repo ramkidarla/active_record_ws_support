@@ -16,6 +16,7 @@ require 'kaminari'
 
 
 module ActiveRecord
+  $HYDRA = Typhoeus::Hydra.new
   class Base
     attr_accessor :ws_errors
     # restfull json adapter
@@ -237,16 +238,12 @@ module ActiveRecord
       attr_reader :schema_cache, :last_use, :in_use, :logger
       alias :in_use? :in_use
       
-      attr_accessor :host, :hydra, :resource_path, :api_key, :api_key_name, :timeout,
-                    :use_ssl, :use_api_key, :enable_delete_multiple,
-                    :log_path
+      attr_accessor :host, :resource_path, :api_key, :api_key_name, :timeout, :log_path
      
      
       def timeout; @timeout ||= DEFAULT_TIMEOUT; end
-      def use_ssl; @use_ssl ||= false; end
-      def log_path; @log_path ||= "log/logical_model.log"; end
-      def use_api_key; @use_api_key ||= false; end
-      def delete_multiple_enabled?; @enable_delete_multiple ||= false; end
+      def log_path; "log/active_record_restfull_json.log"; end
+      def use_api_key; api_key_name.present?; end
       
                      
       
@@ -254,27 +251,13 @@ module ActiveRecord
       
       
       def resource_uri(action = nil)
-        prefix = (use_ssl)? "https://" : "http://"
         sufix = (action.nil?)? "" : "/#{action}"
-        "#{prefix}#{host}#{resource_path}#{sufix}"
+        "#{host}#{resource_path}#{sufix}"
       end
       
     
       ADAPTER_NAME = 'RestfullJson'
       
-      #NATIVE_DATABASE_TYPES = {
-      #    :primary_key => 'INTEGER PRIMARY KEY NOT NULL',
-      #    :string => { :name => "string" },
-      #    :integer => { :name => "integer" },
-      #    :float => { :name => "float" },
-      #    :decimal => { :name => "decimal" },
-      #    :datetime => { :name => "datetime" },
-      #    :timestamp => { :name => "datetime" },
-      #    :time => { :name => "datetime" },
-      #    :date => { :name => "date" },
-      #    :binary => { :name => "blob" },
-      #    :boolean => { :name => "boolean" }
-      #}
       def adapter_name
         ADAPTER_NAME
       end
@@ -333,9 +316,7 @@ module ActiveRecord
       # Disconnects from the database if already connected. Otherwise, this
       # method does nothing.
       def disconnect!
-        super  
         clear_cache!
-        #@connection.close rescue nil
         @connection = nil
       end
 
@@ -380,7 +361,7 @@ module ActiveRecord
       end
 
       def current_savepoint_name
-        "logical_record_#{open_transactions}"
+        "active_record_#{open_transactions}"
       end
 
       # Check the connection back in to the connection pool
@@ -410,13 +391,8 @@ module ActiveRecord
         true
       end
       
-      #def native_database_types #:nodoc:
-       # NATIVE_DATABASE_TYPES
-      #end
-
       # Returns the current database encoding format as a string, eg: 'UTF-8'
       def encoding
-        #@connection.encoding.to_s
         'UTF-8'
       end
 
@@ -472,13 +448,13 @@ module ActiveRecord
       end
 
       # Restfull web service calls ======================================
-      def exec_invoke_call(action, attributes_with_values = {}, body = nil, headers = nil, name = nil, binds = [])
+      def exec_invoke_call(action, id, attributes_with_values = {})
         record.ws_errors = {}
-        result = post_ws(resource_uri(action), {}.merge({:attributes => attributes_with_values}), body, headers)
+        result = post_ws(resource_uri("#{action}/#{id}"), {}.merge({:attributes => attributes_with_values}))
         
         raise WsRecordInvalid.new(record) if record.ws_errors.present? 
         
-        json_parsed_record(result).to_a if result.present?
+        result if result.present?
       end
       
       def exec_select_call(sql, name = nil, binds = [])
@@ -583,7 +559,7 @@ module ActiveRecord
       end
       
       def table_fields(table_name)
-        result = get_ws(resource_uri('schema_fields'))
+        result = get_ws(resource_uri('fields'))
         
         fields = []
         JSON.parse(result).each do |field|
@@ -627,7 +603,7 @@ module ActiveRecord
         end
         
         def logicallogger
-          Logger.new(self.log_path || "log/logical_record.log")
+          Logger.new(self.log_path || "log/active_record_restfull_json.log")
         end
         
        private
@@ -764,7 +740,7 @@ module ActiveRecord
               log_ws_failed(response)
             end
           end
-          self.hydra.queue(request)
+          $HYDRA.queue(request)
         end
   
         def get_ws(url, params = {})
@@ -773,7 +749,7 @@ module ActiveRecord
           result = nil
           _async_get_ws(url, params){|i| result = i}
           Timeout::timeout(timeout/1000) do
-            hydra.run
+            $HYDRA.run
           end
           result
         rescue Timeout::Error

@@ -5,11 +5,23 @@ module ActiveRecord
   # = Active Record Persistence
   module PersistenceLayer
     extend ActiveSupport::Concern
-
+    
+    def invoke(action, attributes_with_values = {})
+      begin
+        self.class.connection.record = self
+        result = self.class.connection.exec_invoke_call(action, id, attributes_with_values)
+        clear_ws_errors
+        result
+      rescue ActiveRecord::WsRecordInvalid
+        add_ws_errors
+        self
+      end
+    end
+    
     def save(*)
       if self.class.connection.adapter_name == 'RestfullJson'
         begin
-          create_or_update_new
+          create_or_update_layer
           clear_ws_errors
           true
         rescue ActiveRecord::RecordInvalid
@@ -26,7 +38,7 @@ module ActiveRecord
     def save!(*)
      if self.class.connection.adapter_name == 'RestfullJson'
       begin
-        create_or_update_new || raise(RecordNotSaved)
+        create_or_update_layer || raise(RecordNotSaved)
         clear_ws_errors
         true
       rescue ActiveRecord::WsRecordInvalid
@@ -204,13 +216,13 @@ module ActiveRecord
       end
     end
 
-    def create_or_update_new
+    def create_or_update_layer
       raise ReadOnlyRecord if readonly?
-      result = new_record? ? create_new : update_new
+      result = new_record? ? create_layer : update_layer
       result != false
     end
 
-    def update_new(attribute_names = @attributes.keys)
+    def update_layer(attribute_names = @attributes.keys)
       attributes_with_values = attributes_with_values(false, false, attribute_names)
       return 0 if attributes_with_values.empty?
       klass = self.class
@@ -223,7 +235,7 @@ module ActiveRecord
       end
     end
 
-    def create_new
+    def create_layer
       attributes_values = attributes_with_values(!id.nil?)
 
       new_id = self.class.unscoped.insert attributes_values, self
