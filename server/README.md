@@ -14,7 +14,7 @@ Usage:
                                                                # Request params: id, attributes
                                                                # Response: status -> 400, data -> json, containing validtion errors                   
       
-      3) :model_name/fields                   :via => :get     # Get attributes
+      3) :model_name/fields                   :via => :get     # Get the model attributes
                                                                # Request parameters: id, attributes
                                                                # Response: status -> 200, data -> json, containing all model attributes
      
