@@ -14,17 +14,17 @@ Usage:
 
 		class User < ActiveRecord::Base
 		  establish_connection :adapter => 'restfull_json', 
-              :host => Settings.api.sso.host,
+              :remote_ws_url => Settings.api.sso.remote_ws_url,
               :api_key_name => Settings.api.sso.api_key_name,
               :api_key => Settings.api.sso.api_key,
-              :resource_path => "/api/v1/users"
+              :remote_model => "users"
 		end
 	    
 Setup:
  - Copy the whole active_record folder to lib under the root.
  - Update api.yml file under config directory with content similar to below
  
-		host: 127.0.0.1:3010
+		remote_ws_url: http://127.0.0.1:3010/api/v1/
 		api_key_name: access_token
 		api_key: 2MNFP7SrgD3QhuvuUY0hD2P8s7MSdCewHySAYvQo
 		
