@@ -2,8 +2,8 @@ active_record_ws_support
 ========================
 This adds some changes to ActiverRecord to make it work via web services with a new restful adapter. The ActiveRecord works as usual.
 
-Usage
-========================
+Usage:
+==========
   Generic restfull url mappings:
   
       1) :model_name/select                   :via => :post    # Finder methods
