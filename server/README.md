@@ -4,41 +4,42 @@ This adds some changes to ActiverRecord to make it work via web services with a 
 
 Usage:
 =========
-  Generic restfull url mappings:
+  Generic restfull url mapping:
   
-      1) :model_name/select                   :via => :post    # Finder methods
-                                                               # Request parameters: sql
-                                                               # Response: 200 code -> json obj
+      1) :model_name/select                   :via => :post    # Find records
+                                                               # Request params: sql
+                                                               # Response: status -> 200, data -> json, containing the selected records
       
-      2) :model_name/valid                    :via => :post    # Validation
-                                                               # Request parameters: id, attributes
-                                                               # Response: 400 code -> json validtion errors                   
+      2) :model_name/valid                    :via => :post    # Check valid?
+                                                               # Request params: id, attributes
+                                                               # Response: status -> 400, data -> json, containing validtion errors                   
       
-      3) :model_name/fields                   :via => :get     # Model columns and attributes
+      3) :model_name/fields                   :via => :get     # Get attributes
                                                                # Request parameters: id, attributes
-                                                               # Response: 200 code -> json model columns map
+                                                               # Response: status -> 200, data -> json, containing all model attributes
      
-      4) :model_name(.:format)                :via => :post    # model create
-                                                               # Request parameters: attributes
-                                                               # Response: 200 code -> json obj
-                                                               #           400 code -> json validtion errors
+      4) :model_name(.:format)                :via => :post    # Create a record
+                                                               # Request params: attributes
+                                                               # Response: status -> 200, data -> json, containing created record
+                                                               #           status -> 400, data -> json, containing validtion errors
       
       5) :model_name/:id(.:format)            :via => :get     # Get model details
                                                                # Request parameters: id
-                                                               # Response: 200 code -> json obj
+                                                               # Response: status ->200, data -> json, containg
                                                                
-      6) :model_name/:id(.:format)            :via => :put     # Model update
-                                                               # Request parameters: id, attributes
-                                                               # Response: 200 code -> head OK
-                                                               #           400 code -> json validtion errors
+      6) :model_name/:id(.:format)            :via => :put     # Update a record
+                                                               # Request params: id, attributes
+                                                               # Response: status -> 200, head OK
+                                                               #           status -> 400, data -> json containing validtion errors
       
-      7) :model_name/:id(.:format)            :via => :delete  # Model Delete
-                                                               # Request parameters: id
-                                                               # Response: 200 code -> head OK
+      7) :model_name/:id(.:format)            :via => :delete  # Delete a record
+                                                               # Request params: id
+                                                               # Response: status -> 200, head OK
       
       8) :model_name/:operation/:id(.:format) :via => :post    # Invoke model business methods
-                                                               # Request parameters: id, operation, attributes
-                                                               # Response: 200 code -> json response
+                                                               # Request params: id, operation, attributes
+                                                               # Response: status -> 200, data -> json containing result of method
 Setup:
+==========
  - Copy generic_controller file to your controllers directory.
  - Add the routes in config/routes.rb to your config/routes.rb file
