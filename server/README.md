@@ -10,7 +10,7 @@ Usage:
                                                                # Request params: sql
                                                                # Response: status -> 200, data -> json, containing the selected records
       
-      2) :model_name/valid                    :via => :post    # Check valid?
+      2) :model_name/valid                    :via => :post    # Check if a record is valid
                                                                # Request params: id, attributes
                                                                # Response: status -> 400, data -> json, containing validtion errors                   
       
