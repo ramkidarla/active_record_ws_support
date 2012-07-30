@@ -24,7 +24,7 @@ Setup:
  - Copy the whole active_record folder to lib under the root.
  - Update api.yml file under config directory with content similar to below
  
-		remote_ws_url: http://127.0.0.1:3010/api/v1/
+		remote_ws_url: http://127.0.0.1:2000/api/v1/
 		api_key_name: access_token
 		api_key: 2MNFP7SrgD3QhuvuUY0hD2P8s7MSdCewHySAYvQo
 		
