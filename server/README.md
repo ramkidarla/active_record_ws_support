@@ -30,7 +30,7 @@ Usage:
       6) :model_name/:id(.:format)            :via => :put     # Update a record
                                                                # Request params: id, attributes
                                                                # Response: status -> 200, head OK
-                                                               #           status -> 400, data -> json containing validtion errors
+                                                               #           status -> 400, data -> json, containing validtion errors
       
       7) :model_name/:id(.:format)            :via => :delete  # Delete a record
                                                                # Request params: id
@@ -38,7 +38,7 @@ Usage:
       
       8) :model_name/:operation/:id(.:format) :via => :post    # Invoke model business methods
                                                                # Request params: id, operation, attributes
-                                                               # Response: status -> 200, data -> json containing result of method
+                                                               # Response: status -> 200, data -> json, containing result of method
 Setup:
 ==========
  - Copy generic_controller file to your controllers directory.
