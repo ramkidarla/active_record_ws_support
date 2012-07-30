@@ -23,9 +23,9 @@ Usage:
                                                                # Response: status -> 200, data -> json, containing created record
                                                                #           status -> 400, data -> json, containing validtion errors
       
-      5) :model_name/:id(.:format)            :via => :get     # Get model details
+      5) :model_name/:id(.:format)            :via => :get     # Get a record
                                                                # Request parameters: id
-                                                               # Response: status ->200, data -> json, containg
+                                                               # Response: status ->200, data -> json, containing the selected record
                                                                
       6) :model_name/:id(.:format)            :via => :put     # Update a record
                                                                # Request params: id, attributes
