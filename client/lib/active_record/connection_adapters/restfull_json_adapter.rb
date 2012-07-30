@@ -238,7 +238,7 @@ module ActiveRecord
       attr_reader :schema_cache, :last_use, :in_use, :logger
       alias :in_use? :in_use
       
-      attr_accessor :host, :resource_path, :api_key, :api_key_name, :timeout, :log_path
+      attr_accessor :remote_ws_url, :remote_model, :api_key, :api_key_name, :timeout, :log_path
      
      
       def timeout; @timeout ||= DEFAULT_TIMEOUT; end
@@ -252,7 +252,7 @@ module ActiveRecord
       
       def resource_uri(action = nil)
         sufix = (action.nil?)? "" : "/#{action}"
-        "#{host}#{resource_path}#{sufix}"
+        "#{remote_ws_url}#{remote_model}#{sufix}"
       end
       
     
@@ -501,7 +501,7 @@ module ActiveRecord
         #end
       end
       
-      def valid_call?(id, attributes_with_values = {})
+      def exec_valid_call?(id, attributes_with_values = {})
         record.ws_errors = {}
         result = post_ws(resource_uri('valid'), {}.merge({:id => id, :attributes => attributes_with_values}))
         

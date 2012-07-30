@@ -183,7 +183,7 @@ module ActiveRecord
     def ws_valid?
       attributes_with_values = attributes_with_values(false, false, attribute_names)
       self.class.connection.record = self
-      result = self.class.connection.valid_call?(id, attributes_with_values)
+      result = self.class.connection.exec_valid_call?(id, attributes_with_values)
       clear_ws_errors
       result
     rescue ActiveRecord::WsRecordInvalid
